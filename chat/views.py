@@ -6,6 +6,7 @@ from chat.models import Chat, Message
 from common.models import User
 from chat import serializers
 from rest_framework.permissions import IsAuthenticated
+from .serializers import ChatListSerializer
 
 
 class ChatListView(generics.ListAPIView):
@@ -13,7 +14,8 @@ class ChatListView(generics.ListAPIView):
         last_message=Message.objects.filter(
             chat_id=models.OuterRef('id')).order_by('-created_at').values('text')[:1],
         last_message_date=Message.objects.filter(
-            chat_id=models.OuterRef('id')).order_by('-created_at').values('created_at')[:1]
+            chat_id=models.OuterRef('id')).order_by('-created_at').values('created_at')[:1],
+        
     )
     
     serializer_class = serializers.ChatListSerializer
@@ -45,8 +47,39 @@ class ChatListView(generics.ListAPIView):
                 default= False,
                 output_field=models.BooleanField()
             ),
+
+
+
             # is_pinned=models.Case(
-            #     models.When(pinned=self.request.user,Then=True)
+            #     models.When(pinned=self.request.user,Then=True),
+            #     default=False,
+            #     output_field=models.BooleanField()
             # )
 
         )
+class MessageListView(generics.ListCreateAPIView):
+    serializer_class = ChatListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Message.objects.filter(chat_id=self.kwargs['pk'])
+        return queryset
+
+class MessageUpdateView(generics.RetrieveUpdateAPIView):
+    serializer_class = ChatListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Message.objects.filter(chat_id=self.kwargs['pk'])
+        return queryset
+
+
+class MessageDeleteView(generics.RetrieveDestroyAPIView):
+    serializer_class = ChatListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Message.objects.filter(chat_id=self.kwargs['pk'])
+        return queryset
+
+
